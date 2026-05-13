@@ -1,5 +1,11 @@
 const normalizeName = (name: string): string => name.trim().toLowerCase();
 
+let writesEnabled = false;
+export const setWritesEnabled = (val: boolean): void => {
+  writesEnabled = val;
+};
+export const isWritesEnabled = (): boolean => writesEnabled;
+
 const enabledToolNames = [
   // Add tool names here to restrict the server to a subset of tools.
   // Leave the array empty to enable every tool.
@@ -20,6 +26,7 @@ const enabledToolNames = [
   "frameworks",
   "list_framework_controls",
   "risks",
+  "deactivate_vulnerabilities",
 ].map(normalizeName);
 
 export const enabledTools = new Set<string>(enabledToolNames);

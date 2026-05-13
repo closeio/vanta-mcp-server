@@ -4,7 +4,13 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { registerAllOperations } from "./registry.js";
 import { initializeToken } from "./auth.js";
-import { getEnabledToolNames, hasEnabledToolFilter } from "./config.js";
+import {
+  getEnabledToolNames,
+  hasEnabledToolFilter,
+  setWritesEnabled,
+} from "./config.js";
+
+const dangerouslyAllowWrites = process.argv.includes("--dangerously-allow-writes");
 
 const server = new McpServer({
   name: "vanta-mcp",
@@ -13,11 +19,16 @@ const server = new McpServer({
 
 async function main() {
   try {
+    setWritesEnabled(dangerouslyAllowWrites);
     await initializeToken();
     console.error("Token initialized successfully");
 
     // Register all tools automatically
     await registerAllOperations(server);
+
+    if (dangerouslyAllowWrites) {
+      console.error("⚠️  Write operations ENABLED (--dangerously-allow-writes)");
+    }
 
     if (hasEnabledToolFilter) {
       const enabledTools = getEnabledToolNames();

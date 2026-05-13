@@ -58,6 +58,21 @@ export async function makeAuthenticatedRequest(
   return response;
 }
 
+/**
+ * Makes an authenticated HTTP write request (POST, PATCH, or DELETE) with a JSON body.
+ */
+export async function makeAuthenticatedWriteRequest(
+  url: string,
+  method: "POST" | "PATCH" | "DELETE",
+  body?: unknown,
+): Promise<Response> {
+  return makeAuthenticatedRequest(url, {
+    method,
+    headers: { "Content-Type": "application/json" },
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  });
+}
+
 // ==========================================
 // RESPONSE PROCESSING UTILITIES
 // ==========================================
