@@ -64,6 +64,7 @@ function loadCredentials(): OAuthCredentials {
 async function fetchNewToken(): Promise<TokenInfo> {
   const credentials = loadCredentials();
 
+  // nosemgrep: use-request-fetcher — URL is the compile-time constant BASE_API_URL; RequestFetcher is not available in this repo
   const response = await fetch(`${BASE_API_URL}/oauth/token`, {
     method: "POST",
     headers: {
