@@ -77,10 +77,12 @@ A [Model Context Protocol](https://modelcontextprotocol.com/) server that provid
 ### Vulnerabilities
 
 - Review vulnerabilities surfaced by Vanta, including CVE metadata and affected assets
+- Deactivate vulnerability monitoring with a reason and optional expiry date *(requires `--dangerously-allow-writes`)*
 
-| Tool Name                                                                      | Description                                                                                                                                                     |
-| ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`vulnerabilities`](https://developer.vanta.com/reference/listvulnerabilities) | List vulnerabilities detected across your infrastructure or retrieve a specific vulnerability by ID with CVE details, severity, and impacted asset information. |
+| Tool Name                                                                                    | Description                                                                                                                                                     |
+| -------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`vulnerabilities`](https://developer.vanta.com/reference/listvulnerabilities)               | List vulnerabilities detected across your infrastructure or retrieve a specific vulnerability by ID with CVE details, severity, and impacted asset information. |
+| [`deactivate_vulnerabilities`](https://developer.vanta.com/reference/deactivatevulnerabilities) ⚠️ | Deactivate monitoring for 1–50 vulnerabilities. Requires a reason per entry and a flag controlling auto-reactivation when a fix becomes available. Optionally set an expiry date. **Requires `--dangerously-allow-writes`**. |
 
 ## Tools
 
@@ -100,6 +102,7 @@ A [Model Context Protocol](https://modelcontextprotocol.com/) server that provid
 | [`people`](https://developer.vanta.com/reference/listpeople)                               | List people across your organization or look up a specific person by ID with role, email, and group membership metadata.                        |
 | [`risks`](https://developer.vanta.com/reference/listriskscenarios)                         | List risk scenarios under management or fetch a specific scenario to review status, scoring, and treatment plans.                               |
 | [`vulnerabilities`](https://developer.vanta.com/reference/listvulnerabilities)             | List detected vulnerabilities or retrieve a specific item with CVE metadata, severity, and impacted assets.                                     |
+| [`deactivate_vulnerabilities`](https://developer.vanta.com/reference/deactivatevulnerabilities) ⚠️ | Deactivate monitoring for 1–50 vulnerabilities. Requires `--dangerously-allow-writes`. |
 
 ## Configuration
 
@@ -146,6 +149,47 @@ Add the server to your Cursor MCP settings:
     "Vanta": {
       "command": "npx",
       "args": ["-y", "@vantasdk/vanta-mcp-server"],
+      "env": {
+        "VANTA_ENV_FILE": "/absolute/path/to/your/vanta-credentials.env"
+      }
+    }
+  }
+}
+```
+
+### Write Operations
+
+By default the server is read-only. To enable write tools, pass `--dangerously-allow-writes` when starting the server. This flag:
+
+- Registers write tools (e.g. `deactivate_vulnerabilities`) that are otherwise hidden
+- Requests the `vanta-api.all:write` OAuth scope in addition to `vanta-api.all:read`
+
+> **⚠️ Warning:** Write operations modify data in your Vanta account. Only enable this flag in environments and with credentials where mutations are intended.
+
+To enable in **Claude Desktop**, add the flag to the `args` array:
+
+```json
+{
+  "mcpServers": {
+    "vanta": {
+      "command": "npx",
+      "args": ["-y", "@vantasdk/vanta-mcp-server", "--dangerously-allow-writes"],
+      "env": {
+        "VANTA_ENV_FILE": "/absolute/path/to/your/vanta-credentials.env"
+      }
+    }
+  }
+}
+```
+
+To enable in **Cursor**, add the flag to the `args` array:
+
+```json
+{
+  "mcpServers": {
+    "Vanta": {
+      "command": "npx",
+      "args": ["-y", "@vantasdk/vanta-mcp-server", "--dangerously-allow-writes"],
       "env": {
         "VANTA_ENV_FILE": "/absolute/path/to/your/vanta-credentials.env"
       }
@@ -227,34 +271,35 @@ This server is built with TypeScript and includes the following development tool
 ```
 vanta-mcp-server/
 ├── src/
-│   ├── operations/              # MCP tool implementations
-│   │   ├── index.ts            # Barrel export for all operations
-│   │   ├── common/             # Shared utilities and infrastructure
-│   │   │   ├── descriptions.ts # Centralized parameter descriptions
-│   │   │   ├── imports.ts      # Common imports barrel for operations
-│   │   │   └── utils.ts        # DRY utilities and request handlers
-│   │   ├── controls.ts         # Control-related operations
-│   │   ├── vendors.ts          # Vendor-related operations
-│   │   ├── people.ts           # People-related operations
-│   │   ├── documents.ts        # Document-related operations
-│   │   ├── frameworks.ts       # Framework-related operations
-│   │   ├── risks.ts            # Risk scenario operations
-│   │   ├── tests.ts            # Test-related operations
-│   │   ├── integrations.ts     # Integration-related operations (consolidated)
-│   │   ├── discovered-vendors.ts # Discovery operations (consolidated)
-│   │   ├── trust-centers.ts    # Trust Center operations
-│   │   └── ...                 # Other resource operations (18 total)
-│   ├── eval/                   # Evaluation and testing framework
-│   │   ├── eval.ts            # LLM evaluation test cases
-│   │   └── README.md          # Evaluation documentation
-│   ├── api.ts                  # Base API configuration
-│   ├── auth.ts                 # Authentication handling
-│   ├── config.ts               # Control enabled tools
-│   ├── index.ts                # Main server entry point
-│   ├── registry.ts             # Automated tool registration
-│   └── types.ts                # Type definitions
-├── build/                      # Compiled JavaScript output
-└── README.md                   # This file
+│   ├── operations/                  # MCP tool implementations
+│   │   ├── index.ts                 # Barrel export for all operations
+│   │   ├── common/                  # Shared utilities and infrastructure
+│   │   │   ├── descriptions.ts      # Centralized parameter descriptions
+│   │   │   ├── imports.ts           # Common imports barrel for operations
+│   │   │   └── utils.ts             # DRY utilities and request handlers
+│   │   ├── controls.ts              # Control-related operations
+│   │   ├── vendors.ts               # Vendor-related operations
+│   │   ├── people.ts                # People-related operations
+│   │   ├── documents.ts             # Document-related operations
+│   │   ├── frameworks.ts            # Framework-related operations
+│   │   ├── risks.ts                 # Risk scenario operations
+│   │   ├── tests.ts                 # Test-related operations
+│   │   ├── integrations.ts          # Integration-related operations (consolidated)
+│   │   ├── discovered-vendors.ts    # Discovery operations (consolidated)
+│   │   ├── trust-centers.ts         # Trust Center operations
+│   │   ├── write-vulnerabilities.ts # Write operations for vulnerabilities (requires --dangerously-allow-writes)
+│   │   └── ...                      # Other resource operations (18 total)
+│   ├── eval/                        # Evaluation and testing framework
+│   │   ├── eval.ts                  # LLM evaluation test cases
+│   │   └── README.md                # Evaluation documentation
+│   ├── api.ts                       # Base API configuration
+│   ├── auth.ts                      # Authentication handling
+│   ├── config.ts                    # Control enabled tools
+│   ├── index.ts                     # Main server entry point
+│   ├── registry.ts                  # Automated tool registration
+│   └── types.ts                     # Type definitions
+├── build/                           # Compiled JavaScript output
+└── README.md                        # This file
 ```
 
 ### Architecture Highlights
