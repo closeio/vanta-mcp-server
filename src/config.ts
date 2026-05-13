@@ -17,6 +17,7 @@ const enabledToolNames = [
   "list_control_tests",
   "list_control_documents",
   "vulnerabilities",
+  "vulnerable_assets",
   "frameworks",
   "list_framework_controls",
   "risks",

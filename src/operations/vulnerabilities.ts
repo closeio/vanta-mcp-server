@@ -16,6 +16,12 @@ const VulnerabilitiesInput = createConsolidatedSchema(
     resourceName: "vulnerability",
   },
   {
+    q: z
+      .string()
+      .describe(
+        "Filter vulnerabilities by a search query, such as text appearing in vulnerability details.",
+      )
+      .optional(),
     externalVulnerabilityId: z
       .string()
       .describe(
@@ -23,27 +29,51 @@ const VulnerabilitiesInput = createConsolidatedSchema(
       )
       .optional(),
     severity: z
-      .string()
+      .enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"])
       .describe(
-        "Filter vulnerabilities by severity. Possible values: LOW (Low severity), MEDIUM (Medium severity), HIGH (High severity), CRITICAL (Critical severity)",
+        "Filter vulnerabilities by severity. Possible values: LOW, MEDIUM, HIGH, CRITICAL.",
       )
       .optional(),
     integrationId: z
       .string()
       .describe(
-        "Filter vulnerabilities by integration ID. Returns vulnerabilities that are associated with the specified integration.",
+        "Filter vulnerabilities by integration ID. Returns vulnerabilities associated with the specified integration.",
       )
       .optional(),
-    slaDeadlineAfter: z
+    isDeactivated: z
+      .boolean()
+      .describe("Filter vulnerabilities by deactivation status.")
+      .optional(),
+    isFixAvailable: z
+      .boolean()
+      .describe("Filter vulnerabilities to only those which have an available fix.")
+      .optional(),
+    packageIdentifier: z
       .string()
       .describe(
-        "Filter vulnerabilities by SLA deadline after the specified date. Returns vulnerabilities that have an SLA deadline after the specified date. Date should be formatted as YYYY-MM-DD.",
+        "Filter vulnerabilities originating from a specific software package.",
       )
       .optional(),
-    slaDeadlineBefore: z
+    slaDeadlineAfterDate: z
       .string()
       .describe(
-        "Filter vulnerabilities by SLA deadline before the specified date. Returns vulnerabilities that have an SLA deadline before the specified date. Date should be formatted as YYYY-MM-DD.",
+        "Filter vulnerabilities with a 'remediate by' deadline after a specified timestamp (ISO 8601, e.g. 2024-01-01T00:00:00Z).",
+      )
+      .optional(),
+    slaDeadlineBeforeDate: z
+      .string()
+      .describe(
+        "Filter vulnerabilities that need to be remediated before a specific timestamp (ISO 8601, e.g. 2024-06-01T00:00:00Z).",
+      )
+      .optional(),
+    includeVulnerabilitiesWithoutSlas: z
+      .boolean()
+      .describe("Include vulnerabilities that lack a specified SLA due date.")
+      .optional(),
+    vulnerableAssetId: z
+      .string()
+      .describe(
+        "Filter vulnerabilities by the asset they affect, identified by a vulnerable asset ID.",
       )
       .optional(),
   },
